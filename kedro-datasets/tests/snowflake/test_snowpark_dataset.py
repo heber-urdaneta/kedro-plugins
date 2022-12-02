@@ -38,10 +38,10 @@ def sf_setup_db(sf_session):
     query = 'CREATE TABLE KEDRO_PYTEST_TESTLOAD ("name" VARCHAR, "age" INTEGER, "bday" date, "height" float, "insert_dttm" timestamp)'
     run_query(sf_session,query)
 
-    query = "INSERT INTO HAE_DEV_DB.DATA.KEDRO_PYTEST_TESTLOAD VALUES ('John', 23, to_date('1999-12-02','YYYY-MM-DD'), 6.5, to_timestamp_ntz('2022-12-02 13:20:01', 'YYYY-MM-DD hh24:mi:ss'))"
+    query = "INSERT INTO KEDRO_PYTEST_TESTLOAD VALUES ('John', 23, to_date('1999-12-02','YYYY-MM-DD'), 6.5, to_timestamp_ntz('2022-12-02 13:20:01', 'YYYY-MM-DD hh24:mi:ss'))"
     run_query(sf_session, query)
 
-    query = "INSERT INTO HAE_DEV_DB.DATA.KEDRO_PYTEST_TESTLOAD VALUES ('Jane', 41, to_date('1981-01-03','YYYY-MM-DD'), 5.7, to_timestamp_ntz('2022-12-02 13:21:11', 'YYYY-MM-DD hh24:mi:ss'))"
+    query = "INSERT INTO KEDRO_PYTEST_TESTLOAD VALUES ('Jane', 41, to_date('1981-01-03','YYYY-MM-DD'), 5.7, to_timestamp_ntz('2022-12-02 13:21:11', 'YYYY-MM-DD hh24:mi:ss'))"
     run_query(sf_session, query)
 
 
