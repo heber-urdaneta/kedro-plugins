@@ -48,6 +48,7 @@ def sf_setup_db(sf_session):
 def sf_db_cleanup(sf_session):
     run_query(sf_session, "DROP TABLE IF EXISTS KEDRO_PYTEST_TESTEXISTS")
     run_query(sf_session, "DROP TABLE IF EXISTS KEDRO_PYTEST_TESTLOAD")
+    run_query(sf_session, "DROP TABLE IF EXISTS KEDRO_PYTEST_TESTSAVE")
 
 def run_query(session, query):
     df = session.sql(query)
@@ -72,6 +73,19 @@ def pandas_equals_ignore_dtype(df1, df2):
 
 
 @pytest.fixture
+def sample_pandas_df() -> pd.DataFrame:
+    return pd.DataFrame(
+            {
+                "name": ["John", "Jane"],
+                "age": [23, 41],
+                "bday": [datetime.date(1999, 12, 2), datetime.date(1981, 1, 3)],
+                "height": [6.5, 5.7],
+                "insert_dttm": [datetime.datetime(2022, 12, 2, 13, 20, 1), datetime.datetime(2022, 12, 2, 13, 21, 11)]
+            },
+            columns=["name", "age", "bday", "height", "insert_dttm"]
+    )
+    
+@pytest.fixture
 def sf_session():
     sf_session = sp.Session.builder.configs(get_connection()).create()
 
@@ -86,28 +100,20 @@ def sf_session():
 
 class TestSnowParkDataSet:
     @pytest.mark.snowflake
-    def test_save(self, sf_session):
-        assert int(1) == int(1)
+    def test_save(self, sample_pandas_df, sf_session):        
+        sp_df = spds(table_name = 'KEDRO_PYTEST_TESTSAVE', credentials = get_connection())
+        sp_df._save(sample_pandas_df)
+        sp_df_saved = sf_session.table("KEDRO_PYTEST_TESTSAVE")
+        assert sp_df_saved.count() == 2
 
     @pytest.mark.snowflake
-    def test_load(self, sf_session):
-        to_match = pd.DataFrame(
-            {
-                "name": ["John", "Jane"],
-                "age": [23, 41],
-                "bday": [datetime.date(1999, 12, 2), datetime.date(1981, 1, 3)],
-                "height": [6.5, 5.7],
-                "insert_dttm": [datetime.datetime(2022, 12, 2, 13, 20, 1), datetime.datetime(2022, 12, 2, 13, 21, 11)]
-            },
-            columns=["name", "age", "bday", "height", "insert_dttm"]
-        )
-
+    def test_load(self, sample_pandas_df, sf_session):
         df_sf = spds(table_name = 'KEDRO_PYTEST_TESTLOAD', credentials = get_connection())._load()
         sf = df_sf.to_pandas()
-
+        
         # Ignoring dtypes as ex. age can be int8 vs int64 and pandas.compare
         # fails on that
-        assert pandas_equals_ignore_dtype(to_match, sf) == True
+        assert pandas_equals_ignore_dtype(sample_pandas_df, sf) == True
 
     @pytest.mark.snowflake
     def test_exists(self, sf_session):
