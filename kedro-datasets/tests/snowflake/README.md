@@ -2,7 +2,7 @@
 
 Execution of automated tests for Snowpark connector requires real Snowflake instance access. Therefore tests located in this folder are **disabled** by default from pytest execution scope using [conftest.py](conftest.py). 
 
-Makefile provides separate argument ``test-snowflake-only`` to run only tests related to Snowpark connector. To run tests one need to provide Snowflake connection parameters via environment variables:
+[Makefile](/Makefile) provides separate argument ``test-snowflake-only`` to run only tests related to Snowpark connector. To run tests one need to provide Snowflake connection parameters via environment variables:
 * SF_ACCOUNT - Snowflake account name with region. Ex `ab12345.eu-central-2`
 * SF_WAREHOUSE - Snowflake virtual warehouse to use
 * SF_DATABASE - Database to use

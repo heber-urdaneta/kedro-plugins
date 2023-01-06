@@ -26,7 +26,6 @@ class SnowParkDataSet(
         >>> weather:
         >>>   type: kedro_datasets.snowflake.SnowParkDataSet
         >>>   table_name: "weather_data"
-        >>>   warehouse: "warehouse_warehouse"
         >>>   database: "meteorology"
         >>>   schema: "observations"
         >>>   credentials: db_credentials
@@ -35,7 +34,7 @@ class SnowParkDataSet(
         >>>     column_order: name
         >>>     table_type: ''
 
-    One can skip everything but "table_name" if warehouse, database,
+    One can skip everything but "table_name" if database and
     schema provided via credentials. Therefore catalog entries can be shorter
     if ex. all used Snowflake tables live in same database/schema.
     Values in dataset definition take priority over ones defined in credentials
@@ -88,7 +87,6 @@ class SnowParkDataSet(
         table_name: str,
         schema: str = None,
         database: str = None,
-        warehouse: str = None,
         load_args: Dict[str, Any] = None,
         save_args: Dict[str, Any] = None,
         credentials: Dict[str, Any] = None,
@@ -102,11 +100,6 @@ class SnowParkDataSet(
                 dictionary. Argument value takes priority over one provided
                 in ``credentials`` if any.
             database: Name of the database where ``schema`` is.
-                Optional as can be provided as part of ``credentials``
-                dictionary. Argument value takes priority over one provided
-                in ``credentials`` if any.
-            warehouse: Name of the warehouse to be used when working with
-                the table.
                 Optional as can be provided as part of ``credentials``
                 dictionary. Argument value takes priority over one provided
                 in ``credentials`` if any.
@@ -124,14 +117,6 @@ class SnowParkDataSet(
 
         if not credentials:
             raise DataSetError("'credentials' argument cannot be empty.")
-
-        # Taking warehouse and database from credentials if they are not
-        # provided with dataset
-        if not warehouse:
-            if not ("warehouse" in credentials and credentials["warehouse"]):
-                raise DataSetError("'warehouse' must be provided by credentials or dataset.")
-            else:
-                warehouse = credentials["warehouse"]
 
         if not database:
             if not ("database" in credentials and credentials["database"]):
@@ -155,14 +140,12 @@ class SnowParkDataSet(
             self._save_args.update(save_args)
 
         self._table_name = table_name
-        self._warehouse = warehouse
         self._database = database
         self._schema = schema
 
         connection_parameters = credentials
         connection_parameters.update(
-            {"warehouse": self._warehouse,
-            "database": self._database,
+            {"database": self._database,
             "schema": self._schema
              }
         )
@@ -173,7 +156,6 @@ class SnowParkDataSet(
     def _describe(self) -> Dict[str, Any]:
         return dict(
             table_name=self._table_name,
-            warehouse=self._warehouse,
             database=self._database,
             schema=self._schema,
         )
@@ -183,7 +165,10 @@ class SnowParkDataSet(
         """Given a connection string, create singleton connection
         to be used across all instances of `SnowParkDataSet` that
         need to connect to the same source.
-            connection_params = {
+        connection_parameters is a dictionary of any values
+        supported by snowflake python connector: https://docs.snowflake.com/en/user-guide/python-connector-api.html#connect
+            example:
+            connection_parameters = {
                 "account": "",
                 "user": "",
                 "password": "", (optional)
